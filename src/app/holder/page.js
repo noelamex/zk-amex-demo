@@ -1,17 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { proveDobBeforeCutoffBrowser } from "@/lib/zkClient";
+import { getAge21CutoffDate } from "@/lib/credential";
 
 export default function HolderPage() {
   const [credentialText, setCredentialText] = useState("");
-  const [result, setResult] = useState(null);
+  const [proofPkg, setProofPkg] = useState(null);
+  const [verifyResult, setVerifyResult] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   async function handleProve(e) {
     e.preventDefault();
     setError("");
-    setResult(null);
+    setProofPkg(null);
+    setVerifyResult(null);
 
     let credential;
     try {
@@ -21,26 +26,67 @@ export default function HolderPage() {
       return;
     }
 
+    const cutoffDate = getAge21CutoffDate();
+
     setLoading(true);
     try {
-      const res = await fetch("/api/holder/prove-age21", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential }),
+      const { proof } = await proveDobBeforeCutoffBrowser({
+        dobYear: credential.dobYear,
+        dobMonth: credential.dobMonth,
+        dobDay: credential.dobDay,
+        cutoffYear: cutoffDate.year,
+        cutoffMonth: cutoffDate.month,
+        cutoffDay: cutoffDate.day,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to prove");
-      setResult(data);
+
+      const pkg = {
+        proof,
+        issuerPubKey: credential.issuerPubKey,
+        cutoffDate,
+      };
+
+      setProofPkg(pkg);
     } catch (e) {
-      setError(e.message);
+      console.error(e);
+      setError(e.message || "Failed to generate proof");
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleSendToVerifier() {
+    if (!proofPkg) return;
+    setVerifying(true);
+    setVerifyResult(null);
+    setError("");
+
+    try {
+      const res = await fetch("/api/verifier/verify-age21", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          proof: proofPkg.proof,
+          issuerPubKey: proofPkg.issuerPubKey,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Verify failed");
+
+      setVerifyResult(data.valid);
+    } catch (e) {
+      console.error(e);
+      setError(e.message || "Failed to verify via backend");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Holder (Your Phone)</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Holder (Prove in browser, verify on Publix backend)
+      </h1>
 
       <form onSubmit={handleProve} className="space-y-4 max-w-xl">
         <div>
@@ -51,7 +97,6 @@ export default function HolderPage() {
             onChange={(e) => setCredentialText(e.target.value)}
           />
         </div>
-
         <button
           type="submit"
           disabled={loading}
@@ -63,21 +108,33 @@ export default function HolderPage() {
 
       {error && <p className="mt-4 text-red-600 text-sm">Error: {error}</p>}
 
-      {result && (
-        <div className="mt-6">
-          <h2 className="font-semibold mb-2">Proof Package</h2>
-          <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
-            {JSON.stringify(
-              {
-                proof: result.proof,
-                issuerPubKey: result.issuerPubKey,
-                cutoffDate: result.cutoffDate,
-              },
-              null,
-              2
-            )}
-          </pre>
-          <p className="text-xs text-gray-500 mt-2">Copy this into the Verifier page.</p>
+      {proofPkg && (
+        <div className="mt-6 space-y-4">
+          <div>
+            <h2 className="font-semibold mb-2">Proof Package</h2>
+            <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
+              {JSON.stringify(proofPkg, null, 2)}
+            </pre>
+          </div>
+
+          <button
+            onClick={handleSendToVerifier}
+            disabled={verifying}
+            className="px-4 py-2 rounded bg-purple-600 text-white disabled:opacity-50"
+          >
+            {verifying ? "Sending to Publix…" : "Send to Publix backend to verify"}
+          </button>
+        </div>
+      )}
+
+      {verifyResult !== null && (
+        <div className="mt-4">
+          <h2 className="font-semibold mb-2">Backend Verification Result</h2>
+          <p className="text-lg">
+            {verifyResult
+              ? "✅ Publix backend verified the proof (age ≥ 21)."
+              : "❌ Publix backend rejected the proof."}
+          </p>
         </div>
       )}
     </main>

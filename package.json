@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently \"npm run dev:next\" \"npm run dev:verifier\"",
+    "dev:next": "next dev",
+    "dev:verifier": "nodemon verifier-service/index.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -18,8 +20,10 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "babel-plugin-react-compiler": "1.0.0",
+    "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
+    "nodemon": "^3.1.11",
     "tailwindcss": "^4"
   }
 }

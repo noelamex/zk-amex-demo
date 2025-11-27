@@ -1,6 +1,6 @@
-// app/api/verifier/verify-age21/route.js
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
-import { verifyAmexAge21 } from "@/lib/zkBackend";
 import { getDemoIssuerPubKey } from "@/lib/credential";
 
 export async function POST(request) {
@@ -12,17 +12,27 @@ export async function POST(request) {
       return NextResponse.json({ error: "Missing proof or issuerPubKey" }, { status: 400 });
     }
 
-    // Check issuer against trusted list (here we only trust demo Amex).
+    // 1) Issuer trust check (Amex)
     if (issuerPubKey !== getDemoIssuerPubKey()) {
       return NextResponse.json({ error: "Issuer not trusted" }, { status: 400 });
     }
 
-    // New zkBackend signature: only takes proof
-    const valid = await verifyAmexAge21(proof);
+    // 2) Forward proof to the verifier service
+    const resp = await fetch("http://localhost:4000/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proof }),
+    });
 
-    return NextResponse.json({ valid });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      throw new Error(data.error || "Verifier service error");
+    }
+
+    return NextResponse.json({ valid: data.valid });
   } catch (err) {
-    console.error("Error in verify-age21:", err);
+    console.error("Error in verify-age21 API:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
