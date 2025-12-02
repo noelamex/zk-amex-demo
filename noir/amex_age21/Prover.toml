@@ -1,6 +1,8 @@
-dob_year = 1990
-dob_month = 5
-dob_day = 10
-cutoff_year = 2004
-cutoff_month = 11
-cutoff_day = 26
+challenge = ""
+context = ""
+cutoff_day = ""
+cutoff_month = ""
+cutoff_year = ""
+dob_day = ""
+dob_month = ""
+dob_year = ""

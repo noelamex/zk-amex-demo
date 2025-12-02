@@ -11,6 +11,19 @@ export default function HolderPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [challengeHex, setChallengeHex] = useState("");
+
+  async function fetchChallenge() {
+    setError("");
+    try {
+      const res = await fetch("/api/verifier/challenge");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to get challenge");
+      setChallengeHex(data.challengeHex);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
 
   async function handleProve(e) {
     e.preventDefault();
@@ -26,6 +39,11 @@ export default function HolderPage() {
       return;
     }
 
+    if (!challengeHex) {
+      setError("Get a challenge from Publix first.");
+      return;
+    }
+
     const cutoffDate = getAge21CutoffDate();
 
     setLoading(true);
@@ -37,12 +55,14 @@ export default function HolderPage() {
         cutoffYear: cutoffDate.year,
         cutoffMonth: cutoffDate.month,
         cutoffDay: cutoffDate.day,
+        challengeHex,
       });
 
       const pkg = {
         proof,
         issuerPubKey: credential.issuerPubKey,
         cutoffDate,
+        challengeHex,
       };
 
       setProofPkg(pkg);
@@ -67,6 +87,7 @@ export default function HolderPage() {
         body: JSON.stringify({
           proof: proofPkg.proof,
           issuerPubKey: proofPkg.issuerPubKey,
+          challengeHex: proofPkg.challengeHex,
         }),
       });
 
@@ -87,6 +108,17 @@ export default function HolderPage() {
       <h1 className="text-2xl font-bold mb-4">
         Holder (Prove in browser, verify on Publix backend)
       </h1>
+      <button
+        type="button"
+        onClick={fetchChallenge}
+        className="px-3 py-2 rounded bg-blue-600 text-white text-sm"
+      >
+        Get challenge from Publix
+      </button>
+
+      {challengeHex && (
+        <p className="mt-2 text-xs text-gray-600 break-all">Current challenge: {challengeHex}</p>
+      )}
 
       <form onSubmit={handleProve} className="space-y-4 max-w-xl">
         <div>

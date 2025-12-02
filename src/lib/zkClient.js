@@ -1,3 +1,5 @@
+import { hexToFieldDecimal } from "@/lib/challenge";
+
 let noirInstance = null;
 let backendInstance = null;
 
@@ -34,8 +36,15 @@ export async function proveDobBeforeCutoffBrowser({
   cutoffYear,
   cutoffMonth,
   cutoffDay,
+  challengeHex,
 }) {
   const { noir, backend } = await initZk();
+
+  if (!challengeHex) {
+    throw new Error("Missing challengeHex");
+  }
+
+  const challengeField = hexToFieldDecimal(challengeHex);
 
   const inputs = {
     dob_year: dobYear,
@@ -44,6 +53,7 @@ export async function proveDobBeforeCutoffBrowser({
     cutoff_year: cutoffYear,
     cutoff_month: cutoffMonth,
     cutoff_day: cutoffDay,
+    challenge: challengeField,
   };
 
   // 1) Execute circuit → witness

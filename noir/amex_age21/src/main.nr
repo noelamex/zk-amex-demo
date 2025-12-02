@@ -33,6 +33,9 @@ fn main(
     cutoff_year: pub u16,
     cutoff_month: pub u8,
     cutoff_day: pub u8,
+
+    challenge: pub Field,
+    context: pub Field,
 ) {
     let dob_code = encode_date(dob_year, dob_month, dob_day);
     let cutoff_code = encode_date(cutoff_year, cutoff_month, cutoff_day);

@@ -1,6 +1,6 @@
 {
   "noir_version": "1.0.0-beta.15+83245db91dcf63420ef4bcbbd85b98f397fee663",
-  "hash": "14170823037821486578",
+  "hash": "10796915780895188836",
   "abi": {
     "parameters": [
       {
@@ -32,18 +32,20 @@
         "name": "cutoff_day",
         "type": { "kind": "integer", "sign": "unsigned", "width": 8 },
         "visibility": "public"
-      }
+      },
+      { "name": "challenge", "type": { "kind": "field" }, "visibility": "public" },
+      { "name": "context", "type": { "kind": "field" }, "visibility": "public" }
     ],
     "return_type": null,
     "error_types": {
       "14990209321349310352": { "error_kind": "string", "string": "attempt to add with overflow" }
     }
   },
-  "bytecode": "H4sIAAAAAAAA/71YzW7TQBCe9U/jJqVNm7SRuLASQgJOIB4BIXFCHLmgClGr8oEAkanEsW/AzwvwFAhegAsXXqE3JA5woOc2K+8ok9XanrFdrxR98czOfDM7s7txFBQjsvjqRTafLfGufVbLT2jRjLEjM5/EkQUeWeixjTzzYiuLCL87UKaBNZTiz13j22hDuEEE2uK9oyeLs/tf7nx7+ujr6emz57cf/H78/vubjw/Pzj//gyJpXMCywLi++EmrLZ9UA8t2LdaBxaRQraqaoJCM0CGSJFQ19+/FhRoI/CbQbKGkBaEx1RF12f0BNOv+zTaEm0SgLfbZ/fyk1Q2fVAPLdi3WocVRoVp1vxG07f4A+N0/FPgdQbOFkhaExlRHRB/cdaoegWAuaO6JYuLfAtkuwtr77GQ5iXawonx1OV2DZjmhXZenVASyWHBstyHcJgJtsc9Tip90d3f0jsVxoVpV1QjanlIRc645pXYEfsfQzx1NY6oj6rL7Y2jW/bttCHeJQFvss/v5SXd3R+9ZnBSqVfcbQdvuj4Hf/XsCvxPo546mMdUR0QfpHR2y54Lmnigm/inIdhHW3mcnvaMFO1hRvrqc9qFZTmhXtWFRppmxCH4vKGbcqkyhgWdL8zqwOEMtLsbM4zByiK4q+Qq/n5Z+1YEghhk0W1TpQUBjquMKHR5TEJQZNOsckzkR+T6x+OH4x8//fwa/qOP9Ct3NCt2tEh02ytjiUbZIX+bZSXqYzU/SRY5vrInDj32kgTUU2k+b2a/9bwROLNQv8tANoEE2sE6xR4d+I2du4qCS86uyOHynAd7YUyLD9bhukdYyT4/TxeHbd6/zLJ3nbrRDwiSoSoD2o2b23qoOyfeRS2gx8tipkufAwaq5VT9afa8a6BOrQePFPC4BO8YgOksWAAA=",
-  "debug_symbols": "tZbBjoMgEIbfhbMHYUCgr7LZNNbSxoSoobrJpum77yijWw/uAbIXPxX/f3TgDz7Z1V2m+7ntbv2DnT6e7BJa79v72fdNPbZ9h3efr4Ktl+cxOIe32Ns4qoY6uG5kp27yvmBftZ+Whx5D3S0c64CjZcFcd0Wi4a31bj57Fb/q8liq9So2nG9ytdfzYz1ARXqQVYq+WuuDTqpvtvpWJuhlaUgvuU7Rw6aXNkVfbXpTpuitJb0qU+orvvZPiZT5U2KrDyavfq5eiiP9H+vfgFrXv1GH9SE3AJCbAMiNAORmAHJDALkpgNwYQG4OIDcIkJsE+McobD20Yq//xKu6acNu82IVO4mC6eVocPEVzC5HXkbwCIGzg4AIiY4IFVFF6Ag04Rh1biMF+nD0FpyIThw9BBDRi6NOKGJF1MTZD1sibCTMfhrJiYIIRPQT+MagiPMHYh3QRPQT6As2UpZEPvM1Nza09cU72tpvU9e87fTj97COrP8CQ+gbd52Cmxu7jGGrfwA=",
+  "bytecode": "H4sIAAAAAAAA/71YzW7UMBAeJw5Nd1vYbnehywVLCAk4gXgEhMQJceSCKkSjKgcWWIVKHPsG/LwAT4HgBbhw4RV6Q+IABziXdePRzlpO4nHSWIomnr9vxjO2syugHNLQF8/y+WxJb5u5WD6xoXqMLJ5+UosXOXixw1Y69BLDkwTfHshT4DWE8Nddw0vbAKaEoQy9c/BocXL3060vjx98Pj5+8vTmvZ8P33599f7+yb+Pf6BMGhewKjBfX/5Jiy0XV4GX7Vqsm4YOStGqqpqRWqaxBcRJqE739+mp2GT4HUDYQnELQmNqAuqy+yMI6/5hG8AhYShD++x+/6TFNRdXgZftWqzYHdulaNX9mtG2+yPw7/4tht9tCFsobkFoTE1AdGKvU/2IGLqgfE8UHf9F4O0irL3LjpcTawcLiteU0yUIywntujylJPBiwTFqAzgiDGVon6eUf9Ld3dE7ho5L0aqqmtH2lJKeuvqU2mH4HUM/dzSNqQmoy+5PIKz7d9sA7hKGMrTP7vdPurs7emLotBStul8z2nZ/Av7dP2H4nUI/dzSNqQmITrh3dOytC8r3RNHxXwbeLsLau+y4dzRjBwuK15TTFQjLCe3qNizylGcsjO8F4Rm3qBIo8LOlee0ZOkMpLsbM4VBaQOeVfI3fD0u/Yo8RwwzCFpV7ENCYmrBiC0cXJDFzLZNmfmH5bBBdSd7xJnp3+O37318bPyjAtEZ2vUZ2o0KGDYPffgf5Inte5EfZfj4/yhYF/oeRWvjYTwq8hkD7SZj92XrZY0re0S/i0I2ggDewholDhn6lpZtaVPDxRVUcrlNhbOiE8HA9rhpKa1lkh9li//Wbl0WezQs72gFBYlQlQvthmL2zqgPyPrQBDZUOO1Exjyxap1v38er6yYE+sRo0XszjPwyGK+JTFgAA",
+  "debug_symbols": "tZZNboMwEIXv4jUL7PEPzlWqKiLEiZAsQA5UqqLcvQMeaFjQha1u+ALOewPDPJknu7rLdD+33a1/sNPHk11C6317P/u+qce27/Dq81Ww9fQ8BufwEntbR9VQB9eN7NRN3hfsq/bT8qfHUHcLxzrgalkw112RaHhrvZt/vYpfdXksrQQncaXFJld7PT/WA2jSg9Qper3ePBieoq+2+lYm6GVZkV5yk6KHTS9til5v+qpM0VtLelWm1Fd87Z8SKe9Pia0+VHn1c/XycH7/mv9tfiwcPz/kBgByEwC5EYDcDEBuCCA3BZAbA8jNAeQGAXKTAP8XBavWQbQGdvpPPKubNuw2L6bZSRTMLMcKh69gdjnyMoJHCHw7CIiQ6IhQETrCRKAJx6hzGynQh6O34ER04ughgIheHHVCETXREGc/bImwkTD7GSQnCiIQ0U/gHYMizg+IdcAQ0U+gL9hIWRL5zNfc2NDWF+9oa79NXfO204/fw7qyfgsMoW/cdQpubuyyhq3+AQ==",
   "file_map": {
     "50": {
-      "source": "// noir/amex_age21/src/main.nr\n\n// Encode a date into a single integer so we can compare dates cheaply.\n// Layout (bit-style):\n//   [ year ... ][ month (4 bits) ][ day (5 bits) ]\n//\n// We use:\n//   code = year * 512 + month * 32 + day\n//   - 512 = 2^9\n//   - 32  = 2^5\n\nfn encode_date(year: u16, month: u8, day: u8) -> u32 {\n    assert(month >= 1);\n    assert(month <= 12);\n\n    assert(day >= 1);\n    assert(day <= 31);\n\n    let y: u32 = year as u32;\n    let m: u32 = month as u32;\n    let d: u32 = day as u32;\n\n    y * 512u32 + m * 32u32 + d\n}\n\nfn main(\n    // Private witness inputs\n    dob_year: u16,\n    dob_month: u8,\n    dob_day: u8,\n\n    // Public verifier inputs\n    cutoff_year: pub u16,\n    cutoff_month: pub u8,\n    cutoff_day: pub u8,\n) {\n    let dob_code = encode_date(dob_year, dob_month, dob_day);\n    let cutoff_code = encode_date(cutoff_year, cutoff_month, cutoff_day);\n\n    assert(dob_code <= cutoff_code);\n}\n",
+      "source": "// noir/amex_age21/src/main.nr\n\n// Encode a date into a single integer so we can compare dates cheaply.\n// Layout (bit-style):\n//   [ year ... ][ month (4 bits) ][ day (5 bits) ]\n//\n// We use:\n//   code = year * 512 + month * 32 + day\n//   - 512 = 2^9\n//   - 32  = 2^5\n\nfn encode_date(year: u16, month: u8, day: u8) -> u32 {\n    assert(month >= 1);\n    assert(month <= 12);\n\n    assert(day >= 1);\n    assert(day <= 31);\n\n    let y: u32 = year as u32;\n    let m: u32 = month as u32;\n    let d: u32 = day as u32;\n\n    y * 512u32 + m * 32u32 + d\n}\n\nfn main(\n    // Private witness inputs\n    dob_year: u16,\n    dob_month: u8,\n    dob_day: u8,\n\n    // Public verifier inputs\n    cutoff_year: pub u16,\n    cutoff_month: pub u8,\n    cutoff_day: pub u8,\n\n    challenge: pub Field,\n    context: pub Field,\n) {\n    let dob_code = encode_date(dob_year, dob_month, dob_day);\n    let cutoff_code = encode_date(cutoff_year, cutoff_month, cutoff_day);\n\n    assert(dob_code <= cutoff_code);\n}\n",
       "path": "/home/dnoel/zk-amex-demo/noir/amex_age21/src/main.nr"
     }
   },
