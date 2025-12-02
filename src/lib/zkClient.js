@@ -37,14 +37,15 @@ export async function proveDobBeforeCutoffBrowser({
   cutoffMonth,
   cutoffDay,
   challengeHex,
+  contextHex
 }) {
   const { noir, backend } = await initZk();
 
-  if (!challengeHex) {
-    throw new Error("Missing challengeHex");
-  }
+  if (!challengeHex) throw new Error("Missing challengeHex");
+  if (!contextHex) throw new Error("Missing contextHex");
 
   const challengeField = hexToFieldDecimal(challengeHex);
+  const contextField = hexToFieldDecimal(contextHex);
 
   const inputs = {
     dob_year: dobYear,
@@ -54,6 +55,7 @@ export async function proveDobBeforeCutoffBrowser({
     cutoff_month: cutoffMonth,
     cutoff_day: cutoffDay,
     challenge: challengeField,
+    context: contextField,
   };
 
   // 1) Execute circuit → witness

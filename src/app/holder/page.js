@@ -12,6 +12,7 @@ export default function HolderPage() {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [challengeHex, setChallengeHex] = useState("");
+  const [contextHex, setContextHex] = useState("");
 
   async function fetchChallenge() {
     setError("");
@@ -20,6 +21,7 @@ export default function HolderPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to get challenge");
       setChallengeHex(data.challengeHex);
+      setContextHex(data.contextHex);
     } catch (e) {
       setError(e.message);
     }
@@ -39,7 +41,7 @@ export default function HolderPage() {
       return;
     }
 
-    if (!challengeHex) {
+    if (!challengeHex || !contextHex) {
       setError("Get a challenge from Publix first.");
       return;
     }
@@ -56,6 +58,7 @@ export default function HolderPage() {
         cutoffMonth: cutoffDate.month,
         cutoffDay: cutoffDate.day,
         challengeHex,
+        contextHex,
       });
 
       const pkg = {
@@ -63,6 +66,7 @@ export default function HolderPage() {
         issuerPubKey: credential.issuerPubKey,
         cutoffDate,
         challengeHex,
+        contextHex,
       };
 
       setProofPkg(pkg);
@@ -88,6 +92,7 @@ export default function HolderPage() {
           proof: proofPkg.proof,
           issuerPubKey: proofPkg.issuerPubKey,
           challengeHex: proofPkg.challengeHex,
+          contextHex: proofPkg.contextHex,
         }),
       });
 
@@ -117,8 +122,10 @@ export default function HolderPage() {
       </button>
 
       {challengeHex && (
-        <p className="mt-2 text-xs text-gray-600 break-all">Current challenge: {challengeHex}</p>
+        <p className="mt-2 text-xs text-gray-600 break-all">Challenge: {challengeHex}</p>
       )}
+
+      {contextHex && <p className="mt-1 text-xs text-gray-600 break-all">Context: {contextHex}</p>}
 
       <form onSubmit={handleProve} className="space-y-4 max-w-xl">
         <div>
