@@ -2,62 +2,63 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { getDemoIssuerPubKey } from "@/lib/credential";
+import { verifyCredentialToken } from "@/lib/issuerJwt";
 import { hexToFieldHex } from "@/lib/challenge";
 import { validateChallenge, consumeChallenge } from "@/lib/challengeStore";
+import { verifyIssuerCredential } from "@/lib/issuerJws";
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { proof, issuerPubKey, challengeHex, contextHex } = body;
+    const { proof, credentialToken, challengeHex, contextHex } = body;
 
-    if (!proof || !issuerPubKey || !challengeHex || !contextHex) {
+    if (!proof || !credentialToken || !challengeHex || !contextHex) {
       return NextResponse.json(
-        { error: "Missing proof, issuerPubKey, challengeHex or contextHex" },
+        { error: "Missing proof, credentialToken, challengeHex, contextHex" },
         { status: 400 }
       );
     }
 
-    // 1) Issuer trust (Amex)
+    // 1) Verify issuer signature (normal crypto)
+    const tok = await verifyIssuerCredential(credentialToken);
+    if (!tok.ok) {
+      return NextResponse.json({ error: tok.error }, { status: 400 });
+    }
+
+    const { issuerPubKey, dobCommitHex } = tok.payload;
+
+    // 2) Issuer trust (Amex)
     if (issuerPubKey !== getDemoIssuerPubKey()) {
       return NextResponse.json({ error: "Issuer not trusted" }, { status: 400 });
     }
 
-    // 2) Check challenge lifecycle + context binding at the app layer
+    // 3) Check challenge lifecycle + context binding at the app layer
     const challengeCheck = validateChallenge(challengeHex, contextHex);
     if (!challengeCheck.ok) {
       return NextResponse.json({ error: challengeCheck.error }, { status: 400 });
     }
 
     const publicInputs = proof.publicInputs || [];
-    if (publicInputs.length < 5) {
+    if (publicInputs.length < 6) {
       return NextResponse.json({ error: "Unexpected publicInputs length" }, { status: 400 });
     }
 
     // Circuit order:
-    // [cutoff_year, cutoff_month, cutoff_day, challenge, context]
+    // [cutoff_year, cutoff_month, cutoff_day, challenge, context, dob_commit]
     const challengeFromProof = publicInputs[3];
     const contextFromProof = publicInputs[4];
+    const dobCommitFromProof = publicInputs[5];
 
-    const expectedChallengeFieldHex = hexToFieldHex(challengeHex);
-    const expectedContextFieldHex = hexToFieldHex(contextHex);
-
-    // 3) Challenge binding inside the proof
-    if (
-      typeof challengeFromProof !== "string" ||
-      challengeFromProof.toLowerCase() !== expectedChallengeFieldHex.toLowerCase()
-    ) {
+    if (challengeFromProof.toLowerCase() !== hexToFieldHex(challengeHex).toLowerCase())
       return NextResponse.json({ error: "Challenge mismatch" }, { status: 400 });
-    }
 
-    // 4) Context binding inside the proof
-    if (
-      typeof contextFromProof !== "string" ||
-      contextFromProof.toLowerCase() !== expectedContextFieldHex.toLowerCase()
-    ) {
+    if (contextFromProof.toLowerCase() !== hexToFieldHex(contextHex).toLowerCase())
       return NextResponse.json({ error: "Context mismatch" }, { status: 400 });
-    }
 
-    // 5) Forward to verifier service (math check)
+    if (dobCommitFromProof.toLowerCase() !== hexToFieldHex(dobCommitHex).toLowerCase())
+      return NextResponse.json({ error: "DOB commitment mismatch" }, { status: 400 });
+
+    // 4) Verify proof
     const resp = await fetch("http://localhost:4000/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -69,7 +70,7 @@ export async function POST(request) {
       throw new Error(data.error || "Verifier service error");
     }
 
-    // 6) If fully valid, mark the challenge as used (single-use)
+    // If fully valid, mark the challenge as used (single-use)
     if (data.valid) {
       consumeChallenge(challengeHex);
     }
