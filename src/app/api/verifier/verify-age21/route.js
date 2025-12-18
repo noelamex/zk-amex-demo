@@ -2,7 +2,6 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { getDemoIssuerPubKey } from "@/lib/credential";
-import { verifyCredentialToken } from "@/lib/issuerJwt";
 import { hexToFieldHex } from "@/lib/challenge";
 import { validateChallenge, consumeChallenge } from "@/lib/challengeStore";
 import { verifyIssuerCredential } from "@/lib/issuerJws";

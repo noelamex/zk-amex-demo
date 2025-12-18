@@ -1,10 +1,8 @@
 import express from "express";
-import { createRequire } from "module";
 import { UltraHonkBackend } from "@aztec/bb.js";
 
 // 1. Clean Import: Use createRequire to load JSON relative to this file
-const require = createRequire(import.meta.url);
-const circuit = require("../src/circuits/amex_age21.json");
+import circuit from "../src/circuits/amex_age21.json" with {type:'json'}
 
 // 2. Initialize Once: Backend setup is synchronous
 const backend = new UltraHonkBackend(circuit.bytecode);
