@@ -1,27 +1,7 @@
 // src/lib/issuerJws.js
 import { SignJWT, jwtVerify, importJWK } from "jose";
-
-/**
- * For a demo: keep keys in env as JWK JSON strings.
- * In production: use a KMS/HSM and rotate keys; publish the public JWK via JWKS endpoint.
- */
-
-/**
- * Environment Variables Setup:
- *
- * Create a `.env.local` file in the project root with:
- *
- * ISSUER_PRIVATE_JWK='{"kty":"OKP","crv":"Ed25519","x":"...","d":"..."}'
- * ISSUER_PUBLIC_JWK='{"kty":"OKP","crv":"Ed25519","x":"..."}'
- *
- * Next.js automatically loads environment variables from:
- * - .env.local (loaded in all environments, ignored by git)
- * - .env.development (loaded in development)
- * - .env.production (loaded in production)
- * - .env (loaded in all environments, can be committed)
- *
- * Note: Restart the dev server after creating/modifying .env files
- */
+import { CURRENT_KID } from "./issuerKeys";
+import { randomUUID } from "crypto";
 
 async function getIssuerPrivateKey() {
   const envVar = process.env.ISSUER_PRIVATE_JWK;
@@ -65,8 +45,11 @@ export async function signIssuerCredential(payload) {
   const key = await getIssuerPrivateKey();
 
   // Typical JWT fields: iss, iat, exp, etc.
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: "EdDSA", typ: "JWT" })
+  return new SignJWT({
+    ...payload,
+    jti: randomUUID(),
+  })
+    .setProtectedHeader({ alg: "EdDSA", typ: "JWT", kid: CURRENT_KID })
     .setIssuedAt()
     .setIssuer("amex-demo")
     .setExpirationTime("30d")

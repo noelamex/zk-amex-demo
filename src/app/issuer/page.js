@@ -11,10 +11,15 @@ export default function IssuerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [issuedPayload, setIssuedPayload] = useState(null);
+  const [revoked, setRevoked] = useState(false);
+
   async function handleIssue() {
     setLoading(true);
     setError("");
     setCredentialToken("");
+    setIssuedPayload(null);
+    setRevoked(false);
 
     try {
       const res = await fetch("/api/issuer/issue-credential", {
@@ -31,11 +36,37 @@ export default function IssuerPage() {
       if (!res.ok) throw new Error(data.error || "Failed to issue");
 
       setCredentialToken(data.credentialToken);
+
+      // 👇 inspect token to get jti
+      const inspectRes = await fetch("/api/issuer/inspect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credentialToken: data.credentialToken }),
+      });
+
+      const payload = await inspectRes.json();
+      setIssuedPayload(payload);
     } catch (e) {
-      console.error(e);
       setError(e.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleRevoke() {
+    if (!issuedPayload?.jti) return;
+
+    try {
+      const res = await fetch("/api/issuer/revoke", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jti: issuedPayload.jti }),
+      });
+
+      if (!res.ok) throw new Error("Failed to revoke");
+      setRevoked(true);
+    } catch (e) {
+      setError(e.message);
     }
   }
 
@@ -92,6 +123,31 @@ export default function IssuerPage() {
             readOnly
           />
           <p className="text-xs text-gray-500 mt-2">Copy this into the Holder page.</p>
+        </div>
+      )}
+      {issuedPayload && (
+        <div className="mt-6 border-t pt-4">
+          <h3 className="font-semibold mb-2">Credential Metadata</h3>
+
+          <p className="text-xs break-all">
+            <strong>jti:</strong> {issuedPayload.jti}
+          </p>
+
+          <button
+            onClick={handleRevoke}
+            disabled={revoked}
+            className={`mt-3 px-4 py-2 rounded text-white ${
+              revoked ? "bg-gray-400" : "bg-red-600"
+            }`}
+          >
+            {revoked ? "Credential Revoked" : "Revoke Credential"}
+          </button>
+
+          {revoked && (
+            <p className="mt-2 text-sm text-red-600">
+              This credential is now revoked and should fail verification.
+            </p>
+          )}
         </div>
       )}
     </main>

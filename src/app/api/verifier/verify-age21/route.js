@@ -6,6 +6,7 @@ import { verifyCredentialToken } from "@/lib/issuerJwt";
 import { hexToFieldHex } from "@/lib/challenge";
 import { validateChallenge, consumeChallenge } from "@/lib/challengeStore";
 import { verifyIssuerCredential } from "@/lib/issuerJws";
+import { isRevoked } from "@/lib/revocationStore";
 
 export async function POST(request) {
   try {
@@ -21,7 +22,12 @@ export async function POST(request) {
 
     // 1) Verify issuer signature (normal crypto)
     const payload = await verifyIssuerCredential(credentialToken);
-    const { issuerPubKey, dobCommitHex } = payload;
+    const { issuerPubKey, dobCommitHex, jti } = payload;
+
+    // 🔒 revocation check
+    if (isRevoked(jti)) {
+      return NextResponse.json({ error: "Credential revoked" }, { status: 400 });
+    }
 
     // 2) Issuer trust (Amex)
     if (issuerPubKey !== getDemoIssuerPubKey()) {
