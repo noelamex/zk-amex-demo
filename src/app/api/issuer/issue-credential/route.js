@@ -21,10 +21,7 @@ export async function POST(request) {
       issuedAt: Date.now(),
     };
 
-    console.log("Issuer Payload: ", payload);
-
     const credentialToken = await signIssuerCredential(payload);
-    console.log("Credential Token: ", credentialToken);
     return NextResponse.json({ credentialToken });
   } catch (e) {
     console.error("Issue credential error:", e);

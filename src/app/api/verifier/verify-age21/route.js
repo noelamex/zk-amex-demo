@@ -20,12 +20,8 @@ export async function POST(request) {
     }
 
     // 1) Verify issuer signature (normal crypto)
-    const tok = await verifyIssuerCredential(credentialToken);
-    if (!tok.ok) {
-      return NextResponse.json({ error: tok.error }, { status: 400 });
-    }
-
-    const { issuerPubKey, dobCommitHex } = tok.payload;
+    const payload = await verifyIssuerCredential(credentialToken);
+    const { issuerPubKey, dobCommitHex } = payload;
 
     // 2) Issuer trust (Amex)
     if (issuerPubKey !== getDemoIssuerPubKey()) {

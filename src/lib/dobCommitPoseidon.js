@@ -1,17 +1,9 @@
-import { buildPoseidon } from "circomlibjs";
-
-let _poseidon = null;
-
-async function poseidon() {
-  if (!_poseidon) _poseidon = await buildPoseidon();
-  return _poseidon;
-}
+import { poseidon2Hash } from "@zkpassport/poseidon2";
 
 // Returns a BigInt field element
 export async function computeDobCommitField(dobYear, dobMonth, dobDay) {
-  const p = await poseidon();
-  const out = p.F.toObject(p([BigInt(dobYear), BigInt(dobMonth), BigInt(dobDay)]));
-  return out; // BigInt
+  const hash = poseidon2Hash([BigInt(dobYear), BigInt(dobMonth), BigInt(dobDay)]);
+  return hash;
 }
 
 export function fieldToHex32(f) {

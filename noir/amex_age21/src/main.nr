@@ -49,8 +49,8 @@ fn main(
 ) {
     let dob_code = encode_date(dob_year, dob_month, dob_day);
     let cutoff_code = encode_date(cutoff_year, cutoff_month, cutoff_day);
-    assert(dob_code <= cutoff_code);
+    assert(dob_code <= cutoff_code, "age check failed");
 
     let expected = dob_commitment(dob_year, dob_month, dob_day);
-    assert(expected == dob_commit);
+    assert(expected == dob_commit, "dob_commit mismatch");
 }
