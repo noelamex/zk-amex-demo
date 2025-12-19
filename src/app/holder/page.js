@@ -20,6 +20,17 @@ export default function HolderPage() {
   const [challengeHex, setChallengeHex] = useState("");
   const [contextHex, setContextHex] = useState("");
 
+  async function fetchPresentationParams(token) {
+    const res = await fetch("/api/issuer/presentation-params", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credentialToken: token }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to get presentation params");
+    return data;
+  }
+
   async function fetchChallenge() {
     setError("");
     try {
@@ -33,7 +44,7 @@ export default function HolderPage() {
     }
   }
 
-  async function inspectToken(token) {
+  /*   async function inspectToken(token) {
     const res = await fetch("/api/issuer/inspect", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -42,7 +53,7 @@ export default function HolderPage() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Invalid credential token");
     return data; // payload
-  }
+  } */
 
   async function handleProve(e) {
     e.preventDefault();
@@ -64,9 +75,10 @@ export default function HolderPage() {
 
     setLoading(true);
     try {
+      //const payload = await inspectToken(credentialToken.trim());
       // Verify token + extract dobCommitHex on the server
-      const payload = await inspectToken(credentialToken.trim());
-      const { dobCommitHex } = payload;
+      const pres = await fetchPresentationParams(credentialToken.trim());
+      const { activePathHex, activeIndex, activeLeafHex, activeRootHex, dobCommitHex } = pres;
 
       if (!dobCommitHex) {
         throw new Error("Token payload missing dobCommitHex");
@@ -85,6 +97,12 @@ export default function HolderPage() {
         contextHex,
 
         dobCommitHex, // binds private DOB to signed commitment
+
+        // active membership proof inputs
+        activeRootHex: activeRootHex,
+        activeLeafHex: activeLeafHex,
+        activeIndex: activeIndex,
+        activePathHex: activePathHex,
       });
 
       setProofPkg({
@@ -93,6 +111,7 @@ export default function HolderPage() {
         cutoffDate,
         challengeHex,
         contextHex,
+        activeRootHex: pres.activeRootHex, // optional for debugging
       });
     } catch (e) {
       console.error(e);

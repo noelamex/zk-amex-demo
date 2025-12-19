@@ -39,6 +39,10 @@ export async function proveDobBeforeCutoffBrowser({
   challengeHex,
   contextHex,
   dobCommitHex,
+  activeRootHex,
+  activeLeafHex,
+  activeIndex,
+  activePathHex,
 }) {
   const { noir, backend } = await initZk();
 
@@ -59,8 +63,12 @@ export async function proveDobBeforeCutoffBrowser({
     challenge: challengeField,
     context: contextField,
     dob_commit: dobCommitField,
+    // active set membership
+    active_root: hexToFieldDecimal(activeRootHex),
+    active_leaf: hexToFieldDecimal(activeLeafHex),
+    active_path: activePathHex.map(hexToFieldDecimal),
+    active_index: activeIndex,
   };
-
   // 1) Execute circuit → witness
   const { witness } = await noir.execute(inputs);
 

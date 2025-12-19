@@ -3,8 +3,8 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { computeDobCommitField, fieldToHex } from "@/lib/dobCommitPoseidon";
-import { getDemoIssuerPubKey } from "@/lib/credential";
 import { signIssuerCredential } from "@/lib/issuerJws";
+import { activateCommitHex } from "@/lib/activeMerkle";
 
 export async function POST(request) {
   try {
@@ -13,15 +13,11 @@ export async function POST(request) {
     const dobCommit = await computeDobCommitField(dobYear, dobMonth, dobDay);
     const dobCommitHex = fieldToHex(dobCommit);
 
-    // Payload contains NO DOB, just the commitment + metadata
-    const payload = {
-      issuer: "amex-demo",
-      issuerPubKey: getDemoIssuerPubKey(),
-      dobCommitHex,
-      issuedAt: Date.now(),
-    };
-
+    const payload = { dobCommitHex };
     const credentialToken = await signIssuerCredential(payload);
+
+    // Only activate if issuance succeeded
+    activateCommitHex(dobCommitHex);
     return NextResponse.json({ credentialToken });
   } catch (e) {
     console.error("Issue credential error:", e);

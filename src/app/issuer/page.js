@@ -11,15 +11,15 @@ export default function IssuerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [issuedPayload, setIssuedPayload] = useState(null);
   const [revoked, setRevoked] = useState(false);
+  const [activeRootHex, setActiveRootHex] = useState("");
 
   async function handleIssue() {
     setLoading(true);
     setError("");
     setCredentialToken("");
-    setIssuedPayload(null);
     setRevoked(false);
+    setActiveRootHex("");
 
     try {
       const res = await fetch("/api/issuer/issue-credential", {
@@ -37,15 +37,12 @@ export default function IssuerPage() {
 
       setCredentialToken(data.credentialToken);
 
-      // 👇 inspect token to get jti
-      const inspectRes = await fetch("/api/issuer/inspect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credentialToken: data.credentialToken }),
-      });
-
-      const payload = await inspectRes.json();
-      setIssuedPayload(payload);
+      // Optional: fetch current active root for display/debug
+      const rootRes = await fetch("/api/issuer/active-root");
+      if (rootRes.ok) {
+        const rootData = await rootRes.json();
+        setActiveRootHex(rootData.activeRootHex);
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -54,17 +51,19 @@ export default function IssuerPage() {
   }
 
   async function handleRevoke() {
-    if (!issuedPayload?.jti) return;
-
+    setError("");
     try {
-      const res = await fetch("/api/issuer/revoke", {
+      const res = await fetch("/api/issuer/deactivate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jti: issuedPayload.jti }),
+        body: JSON.stringify({ credentialToken }),
       });
 
-      if (!res.ok) throw new Error("Failed to revoke");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to deactivate");
+
       setRevoked(true);
+      if (data.activeRootHex) setActiveRootHex(data.activeRootHex);
     } catch (e) {
       setError(e.message);
     }
@@ -115,37 +114,32 @@ export default function IssuerPage() {
       {error && <p className="mt-4 text-red-600 text-sm">Error: {error}</p>}
 
       {credentialToken && (
-        <div className="mt-6">
-          <h2 className="font-semibold mb-2">credentialToken</h2>
-          <textarea
-            className="w-full h-40 border rounded p-3 text-xs"
-            value={credentialToken}
-            readOnly
-          />
-          <p className="text-xs text-gray-500 mt-2">Copy this into the Holder page.</p>
-        </div>
-      )}
-      {issuedPayload && (
-        <div className="mt-6 border-t pt-4">
-          <h3 className="font-semibold mb-2">Credential Metadata</h3>
-
-          <p className="text-xs break-all">
-            <strong>jti:</strong> {issuedPayload.jti}
-          </p>
+        <div className="mt-6 space-y-3">
+          <div>
+            <h2 className="font-semibold mb-2">credentialToken</h2>
+            <textarea
+              className="w-full h-40 border rounded p-3 text-xs"
+              value={credentialToken}
+              readOnly
+            />
+            <p className="text-xs text-gray-500 mt-2">Copy this into the Holder page.</p>
+          </div>
 
           <button
             onClick={handleRevoke}
             disabled={revoked}
-            className={`mt-3 px-4 py-2 rounded text-white ${
-              revoked ? "bg-gray-400" : "bg-red-600"
-            }`}
+            className={`px-4 py-2 rounded text-white ${revoked ? "bg-gray-400" : "bg-red-600"}`}
           >
-            {revoked ? "Credential Revoked" : "Revoke Credential"}
+            {revoked ? "Deactivated (not active)" : "Deactivate Credential"}
           </button>
 
+          {activeRootHex && (
+            <p className="text-xs text-gray-600 break-all">Active root: {activeRootHex}</p>
+          )}
+
           {revoked && (
-            <p className="mt-2 text-sm text-red-600">
-              This credential is now revoked and should fail verification.
+            <p className="text-sm text-red-600">
+              This credential is no longer in the active set and should fail proving/verification.
             </p>
           )}
         </div>
