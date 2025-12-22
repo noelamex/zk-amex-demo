@@ -14,11 +14,11 @@ export async function POST(request) {
     const dobCommitHex = fieldToHex(dobCommit);
 
     const payload = { dobCommitHex };
-    const credentialToken = await signIssuerCredential(payload);
+    const { token: credentialToken, kid } = await signIssuerCredential(payload);
 
     // Only activate if issuance succeeded
     activateCommitHex(dobCommitHex);
-    return NextResponse.json({ credentialToken });
+    return NextResponse.json({ credentialToken, kid });
   } catch (e) {
     console.error("Issue credential error:", e);
     return NextResponse.json({ error: "Internal issuer error" }, { status: 500 });

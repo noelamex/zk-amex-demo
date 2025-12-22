@@ -1,5 +1,5 @@
 // src/lib/challenge.js
-import { randomBytes, createHash } from "crypto";
+import { randomBytes } from "crypto";
 
 const FIELD_BYTES = 31;
 
@@ -19,15 +19,4 @@ export function hexToFieldHex(hex) {
 
 export function generateChallengeHex() {
   return randomBytes(FIELD_BYTES).toString("hex"); // 31 bytes
-}
-
-// ---------- Context ----------
-
-const CONTEXT_STRING = "publix:age_check:alcohol:v1";
-
-export function getContextHex() {
-  const full = createHash("sha256").update(CONTEXT_STRING, "utf8").digest("hex");
-
-  // Truncate to fit field (31 bytes)
-  return full.slice(0, FIELD_BYTES * 2);
 }

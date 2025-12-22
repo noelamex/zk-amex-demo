@@ -1,0 +1,1 @@
+export const ISSUER_ID = "amex-demo";

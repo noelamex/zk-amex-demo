@@ -3,24 +3,31 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { hexToFieldHex } from "@/lib/challenge";
 import { validateChallenge, consumeChallenge } from "@/lib/challengeStore";
-import { verifyIssuerCredential } from "@/lib/issuerJws";
+import { verifyCredentialToken } from "@/lib/verifierJwt";
 import { getActiveRootHex } from "@/lib/activeMerkle";
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { proof, credentialToken, challengeHex, contextHex } = body;
+    const { presentation } = body;
+    if (!presentation) {
+      return NextResponse.json({ error: "Missing presentation" }, { status: 400 });
+    }
 
-    if (!proof || !credentialToken || !challengeHex || !contextHex) {
-      return NextResponse.json(
-        { error: "Missing proof, credentialToken, challengeHex, contextHex" },
-        { status: 400 }
-      );
+    const { version, proof, credentialToken, challengeHex, contextHex, presentationIssuedAt } =
+      presentation;
+
+    if (version !== "1") {
+      return NextResponse.json({ error: "Unsupported presentation version" }, { status: 400 });
     }
 
     // Verify issuer signature (normal crypto)
-    const payload = await verifyIssuerCredential(credentialToken);
+    const { payload, issuer } = await verifyCredentialToken(credentialToken);
     const { dobCommitHex } = payload;
+
+    if (!dobCommitHex) {
+      return NextResponse.json({ error: "Token missing dobCommitHex" }, { status: 400 });
+    }
 
     // Check challenge lifecycle + context binding at the app layer
     const challengeCheck = validateChallenge(challengeHex, contextHex);
@@ -72,7 +79,7 @@ export async function POST(request) {
       consumeChallenge(challengeHex);
     }
 
-    return NextResponse.json({ valid: data.valid });
+    return NextResponse.json({ valid: data.valid, issuer: issuer.iss });
   } catch (err) {
     console.error("Error in verify-age21 API:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

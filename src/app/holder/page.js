@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { proveDobBeforeCutoffBrowser } from "@/lib/zkClient";
 import { getAge21CutoffDate } from "@/lib/credential";
 
@@ -19,6 +19,27 @@ export default function HolderPage() {
   const [verifying, setVerifying] = useState(false);
   const [challengeHex, setChallengeHex] = useState("");
   const [contextHex, setContextHex] = useState("");
+  const [contextStr, setContextStr] = useState("");
+  const [expiresAt, setExpiresAt] = useState(null);
+  const [secondsLeft, setSecondsLeft] = useState(null);
+
+  useEffect(() => {
+    if (!expiresAt) {
+      setSecondsLeft(null);
+      return;
+    }
+
+    const tick = () => {
+      const msLeft = expiresAt - Date.now();
+      const s = Math.max(0, Math.ceil(msLeft / 1000));
+      setSecondsLeft(s);
+    };
+
+    tick(); // run immediately
+    const id = setInterval(tick, 250); // smooth enough
+
+    return () => clearInterval(id);
+  }, [expiresAt]);
 
   async function fetchPresentationParams(token) {
     const res = await fetch("/api/issuer/presentation-params", {
@@ -39,27 +60,23 @@ export default function HolderPage() {
       if (!res.ok) throw new Error(data.error || "Failed to get challenge");
       setChallengeHex(data.challengeHex);
       setContextHex(data.contextHex);
+      setContextStr(data.contextStr);
+      setExpiresAt(data.expiresAt);
     } catch (e) {
       setError(e.message);
     }
   }
-
-  /*   async function inspectToken(token) {
-    const res = await fetch("/api/issuer/inspect", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ credentialToken: token }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Invalid credential token");
-    return data; // payload
-  } */
 
   async function handleProve(e) {
     e.preventDefault();
     setError("");
     setProofPkg(null);
     setVerifyResult(null);
+
+    if (secondsLeft === 0) {
+      setError("Challenge expired. Get a new challenge from Publix.");
+      return;
+    }
 
     if (!credentialToken.trim()) {
       setError("Paste the credentialToken from Issuer first.");
@@ -111,6 +128,7 @@ export default function HolderPage() {
         cutoffDate,
         challengeHex,
         contextHex,
+        contextStr,
         activeRootHex: pres.activeRootHex, // optional for debugging
       });
     } catch (e) {
@@ -132,10 +150,14 @@ export default function HolderPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          proof: proofPkg.proof,
-          credentialToken: proofPkg.credentialToken,
-          challengeHex: proofPkg.challengeHex,
-          contextHex: proofPkg.contextHex,
+          presentation: {
+            version: "1",
+            credentialToken: proofPkg.credentialToken,
+            proof: proofPkg.proof,
+            challengeHex: proofPkg.challengeHex,
+            contextHex: proofPkg.contextHex,
+            presentationIssuedAt: Date.now(),
+          },
         }),
       });
 
@@ -168,6 +190,11 @@ export default function HolderPage() {
         <p className="mt-2 text-xs text-gray-600 break-all">Challenge: {challengeHex}</p>
       )}
       {contextHex && <p className="mt-1 text-xs text-gray-600 break-all">Context: {contextHex}</p>}
+      {secondsLeft !== null && (
+        <p className="mt-1 text-xs text-gray-600">
+          Expires in: <span className="font-mono">{secondsLeft}s</span>
+        </p>
+      )}
 
       <div className="mt-6 max-w-xl space-y-3">
         <div>
@@ -209,7 +236,7 @@ export default function HolderPage() {
         <form onSubmit={handleProve} className="space-y-4">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || secondsLeft === 0 || secondsLeft === null}
             className="px-4 py-2 rounded bg-green-600 text-white disabled:opacity-50"
           >
             {loading ? "Generating proof…" : "Generate ZK Proof"}

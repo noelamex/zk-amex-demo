@@ -2,43 +2,35 @@
 const challenges = new Map();
 
 // e.g. 5 minutes TTL for a challenge
-const TTL_MS = 5 * 60 * 1000;
+export const TTL_MS = 5 * 60 * 1000;
 
-export function registerChallenge(challengeHex, contextHex) {
-  challenges.set(challengeHex, {
-    contextHex,
-    createdAt: Date.now(),
-    used: false,
+export function registerChallenge(challengeHex, contextHex, issuedAt = Date.now()) {
+  challenges.set(challengeHex.toLowerCase(), {
+    contextHex: contextHex.toLowerCase(),
+    issuedAt,
   });
 }
 
 // Validate but do NOT mark used yet
 export function validateChallenge(challengeHex, contextHex) {
-  const entry = challenges.get(challengeHex);
-  if (!entry) {
-    return { ok: false, error: "Unknown challenge" };
-  }
+  const key = challengeHex.toLowerCase();
+  const entry = challenges.get(key);
+  if (!entry) return { ok: false, error: "Unknown or already-used challenge" };
 
-  if (entry.used) {
-    return { ok: false, error: "Challenge already used" };
-  }
-
-  if (entry.contextHex !== contextHex) {
+  if (entry.contextHex !== contextHex.toLowerCase()) {
     return { ok: false, error: "Context mismatch for challenge" };
   }
 
-  if (Date.now() - entry.createdAt > TTL_MS) {
-    challenges.delete(challengeHex);
+  const age = Date.now() - entry.issuedAt;
+  if (age > TTL_MS) {
+    challenges.delete(key);
     return { ok: false, error: "Challenge expired" };
   }
 
   return { ok: true };
 }
 
-// Mark as used AFTER successful verification
+// Delete AFTER successful verification
 export function consumeChallenge(challengeHex) {
-  const entry = challenges.get(challengeHex);
-  if (!entry) return;
-  entry.used = true;
-  challenges.set(challengeHex, entry);
+  challenges.delete(challengeHex.toLowerCase());
 }

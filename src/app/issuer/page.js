@@ -14,6 +14,10 @@ export default function IssuerPage() {
   const [revoked, setRevoked] = useState(false);
   const [activeRootHex, setActiveRootHex] = useState("");
 
+  const [currentKid, setCurrentKid] = useState("");
+  const [allKids, setAllKids] = useState([]);
+  const [rotating, setRotating] = useState(false);
+
   async function handleIssue() {
     setLoading(true);
     setError("");
@@ -36,6 +40,7 @@ export default function IssuerPage() {
       if (!res.ok) throw new Error(data.error || "Failed to issue");
 
       setCredentialToken(data.credentialToken);
+      setCurrentKid(data.kid || currentKid);
 
       // Optional: fetch current active root for display/debug
       const rootRes = await fetch("/api/issuer/active-root");
@@ -66,6 +71,23 @@ export default function IssuerPage() {
       if (data.activeRootHex) setActiveRootHex(data.activeRootHex);
     } catch (e) {
       setError(e.message);
+    }
+  }
+
+  async function handleRotateKey() {
+    setRotating(true);
+    setError("");
+    try {
+      const res = await fetch("/api/issuer/rotate", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to rotate key");
+
+      setCurrentKid(data.currentKid);
+      setAllKids(data.allKids || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setRotating(false);
     }
   }
 
@@ -143,6 +165,28 @@ export default function IssuerPage() {
             </p>
           )}
         </div>
+      )}
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleRotateKey}
+          disabled={rotating}
+          className="px-3 py-2 rounded bg-gray-900 text-white text-sm disabled:opacity-50"
+        >
+          {rotating ? "Rotating…" : "Rotate Signing Key"}
+        </button>
+
+        {currentKid && (
+          <span className="text-xs text-gray-600">
+            Current kid: <span className="font-mono">{currentKid}</span>
+          </span>
+        )}
+      </div>
+
+      {allKids.length > 0 && (
+        <p className="mt-2 text-xs text-gray-500">
+          JWKS kids: <span className="font-mono">{allKids.join(", ")}</span>
+        </p>
       )}
     </main>
   );
