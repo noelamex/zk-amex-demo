@@ -257,7 +257,7 @@ export default function HolderPage() {
 
           <button
             onClick={handleSendToVerifier}
-            disabled={verifying}
+            disabled={verifying || secondsLeft === 0 || secondsLeft === null}
             className="px-4 py-2 rounded bg-purple-600 text-white disabled:opacity-50"
           >
             {verifying ? "Sending to Publix…" : "Send to Publix backend to verify"}

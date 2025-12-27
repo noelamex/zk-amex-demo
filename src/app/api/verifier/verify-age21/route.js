@@ -36,8 +36,11 @@ export async function POST(request) {
     }
 
     const publicInputs = proof.publicInputs || [];
-    if (publicInputs.length < 7) {
-      return NextResponse.json({ error: "Unexpected publicInputs length" }, { status: 400 });
+    if (publicInputs.length !== 7) {
+      return NextResponse.json(
+        { error: `Unexpected publicInputs length: ${publicInputs.length}` },
+        { status: 400 }
+      );
     }
 
     // Circuit order:

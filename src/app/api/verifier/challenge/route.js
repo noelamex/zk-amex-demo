@@ -4,17 +4,13 @@ import { NextResponse } from "next/server";
 import { generateChallengeHex } from "@/lib/challenge";
 import { registerChallenge, TTL_MS } from "@/lib/challengeStore";
 import { buildContextStr, contextStrToHex } from "@/lib/context";
+import { getVendorPolicy } from "@/lib/vendorPolicy";
 
 export async function GET() {
   const challengeHex = generateChallengeHex();
 
-  // Vendor-defined context (canonical)
-  const contextStr = buildContextStr({
-    domain: "publix.com",
-    purpose: "age21",
-    terminalId: "pos-001",
-  });
-
+  const policy = getVendorPolicy();
+  const contextStr = buildContextStr(policy);
   const contextHex = contextStrToHex(contextStr);
 
   const issuedAt = Date.now();
